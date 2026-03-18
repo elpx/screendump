@@ -46,5 +46,13 @@
 	<true/>
 	<key>com.apple.private.security.disk-device-access</key>
 	<true/>
+	<!-- iOS 15 新增entitlements -->
+	<key>com.apple.private.security.immutable-component</key>
+	<true/>
+	<key>com.apple.private.security.application-specific-register-names</key>
+	<array>
+		<string>IOSurface</string>
+		<string>IOMobileFramebuffer</string>
+	</array>
 </dict>
 </plist>

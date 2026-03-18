@@ -47,7 +47,16 @@ extern "C" kern_return_t IOMobileFramebufferSwapSetLayer(
 );
 typedef mach_port_t io_service_t;
 typedef kern_return_t IOReturn;
+#define kIOReturnSuccess 0
 typedef IOReturn IOMobileFramebufferReturn;
+
+// iOS 15 需要的常量定义
+#ifndef kIOSurfaceLockReadOnly
+#define kIOSurfaceLockReadOnly 0x00000001
+#endif
+#ifndef kIOSurfaceLockWriteOnly
+#define kIOSurfaceLockWriteOnly 0x00000002
+#endif
 typedef io_service_t IOMobileFramebufferService;
 extern "C" mach_port_t mach_task_self(void);
 extern "C" void IOSurfaceFlushProcessorCaches(IOSurfaceRef buffer);
@@ -99,9 +108,22 @@ static void VNCSetup()
 {
 	if(!screenSurface) {
 		IOSurfaceAcceleratorCreate(kCFAllocatorDefault, 0, &accelerator);
-		
+
+		// iOS 15适配: 尝试多个层索引
 		IOMobileFramebufferGetMainDisplay(&framebufferConnection);
-		IOMobileFramebufferGetLayerDefaultSurface(framebufferConnection, 0, &screenSurface);
+
+		// 尝试层0 (旧版iOS)
+		IOMobileFramebufferReturn result = IOMobileFramebufferGetLayerDefaultSurface(framebufferConnection, 0, &screenSurface);
+
+		// 如果层0失败，尝试层1 (iOS 15+ 部分设备)
+		if (result != kIOReturnSuccess || screenSurface == NULL) {
+			result = IOMobileFramebufferGetLayerDefaultSurface(framebufferConnection, 1, &screenSurface);
+		}
+
+		// 如果还是失败，尝试层2 (某些iOS 15设备)
+		if (result != kIOReturnSuccess || screenSurface == NULL) {
+			result = IOMobileFramebufferGetLayerDefaultSurface(framebufferConnection, 2, &screenSurface);
+		}
 		
 		//CGSize size;
 		//IOMobileFramebufferGetDisplaySize(framebufferConnection, &size);
@@ -214,6 +236,7 @@ static void loadPrefs(void)
 
 
 static uint32_t oldSeed;
+static bool useIOSurfaceLock = false; // iOS 15使用IOSurfaceLock检测变化
 
 @implementation FrameUpdater
 {
@@ -240,10 +263,24 @@ static uint32_t oldSeed;
 {
 	if(isLoopFrame && CCSisEnabled) {
 		//check if screen changed
-		uint32_t newSeed = IOSurfaceGetSeed(screenSurface);
-		
-		if(oldSeed != newSeed && rfbIsActive(screen)) {
+		// iOS 15: 使用IOSurfaceLock/Unlock替代IOSurfaceGetSeed
+		uint32_t newSeed = 0;
+		IOReturn lockResult = IOSurfaceLock(screenSurface, kIOSurfaceLockReadOnly, &newSeed);
+		bool hasNewFrame = false;
+
+		if (lockResult == kIOReturnSuccess) {
+			if (useIOSurfaceLock) {
+				// iOS 15+ 方式: 比较seed值
+				hasNewFrame = (oldSeed != newSeed);
+			} else {
+				// 旧版iOS: 成功lock就说明有变化
+				hasNewFrame = (oldSeed == 0 || newSeed != oldSeed);
+			}
 			oldSeed = newSeed;
+			IOSurfaceUnlock(screenSurface, kIOSurfaceLockReadOnly, &newSeed);
+		}
+
+		if (hasNewFrame && rfbIsActive(screen)) {
 			[q addOperationWithBlock: ^{
 				IOSurfaceAcceleratorTransferSurface(accelerator, screenSurface, static_buffer, NULL, NULL, NULL, NULL);
 				rfbMarkRectAsModified(screen, 0, 0, width, height);
@@ -512,7 +549,9 @@ static void VNCPointerNew(int buttons, int x, int y, CGPoint location, int diff,
 
     IOHIDEventRef hand(IOHIDEventCreateDigitizerEvent(kCFAllocatorDefault, mach_absolute_time(), kIOHIDDigitizerTransducerTypeHand, 1<<22, 1, handm, 0, xf, yf, 0, 0, 0, 0, 0, 0));
     IOHIDEventSetIntegerValue(hand, kIOHIDEventFieldIsBuiltIn, true);
-    IOHIDEventSetIntegerValue(hand, kIOHIDEventFieldDigitizerIsDisplayIntegrated, true);
+    // iOS 15: kIOHIDEventFieldDigitizerIsDisplayIntegrated 可能不再需要或会导致问题
+    // 注释掉以提高兼容性
+    // IOHIDEventSetIntegerValue(hand, kIOHIDEventFieldDigitizerIsDisplayIntegrated, true);
 
     IOHIDEventRef finger(IOHIDEventCreateDigitizerFingerEvent(kCFAllocatorDefault, mach_absolute_time(), 3, 2, fingerm, xf, yf, 0, 0, 0, tis, tis, 0));
     IOHIDEventAppendEvent(hand, finger);
