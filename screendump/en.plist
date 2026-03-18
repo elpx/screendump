@@ -2,22 +2,37 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<!-- IOKit 用户客户端类 - iOS 13/14/15 -->
 	<key>com.apple.security.iokit-user-client-class</key>
 	<array>
 		<string>IOSurfaceAcceleratorClient</string>
 		<string>IOMobileFramebufferUserClient</string>
 		<string>IOSurfaceRootUserClient</string>
+		<string>AppleCLCD2UserClient</string>
+		<string>AppleCLCDUserClient</string>
+		<!-- iOS 15 新增 -->
+		<string>IOSurfaceServerClient</string>
 	</array>
+
+	<!-- 平台应用 (iOS 14+) -->
 	<key>platform-application</key>
 	<true/>
+
+	<!-- 私有权限 -->
 	<key>com.apple.private.security.no-container</key>
 	<true/>
 	<key>com.apple.private.skip-library-validation</key>
 	<true/>
 	<key>run-unsigned-code</key>
 	<true/>
+
+	<!-- 调试权限 -->
 	<key>get-task-allow</key>
 	<true/>
+	<key>task_for_pid-allow</key>
+	<true/>
+
+	<!-- HID 事件权限 -->
 	<key>com.apple.private.hid.client.event-dispatch</key>
 	<true/>
 	<key>com.apple.private.hid.client.event-filter</key>
@@ -26,33 +41,71 @@
 	<true/>
 	<key>com.apple.private.hid.client.service-protected</key>
 	<true/>
+
+	<!-- IOSurface 权限 -->
 	<key>com.apple.private.IOSurface.protected-access</key>
 	<true/>
+	<key>com.apple.private.IOSurface.allow-global</key>
+	<true/>
+	<key>com.apple.private.IOSurface.allow-pool</key>
+	<true/>
+	<key>com.apple.private.IOSurface.unrestricted</key>
+	<true/>
+
+	<!-- QuartzCore 权限 -->
 	<key>com.apple.QuartzCore.displayable-context</key>
 	<true/>
 	<key>com.apple.QuartzCore.global-capture</key>
 	<true/>
 	<key>com.apple.QuartzCore.secure-mode</key>
 	<true/>
+
+	<!-- 设备访问权限 -->
 	<key>com.apple.gasgauge.user-access-device</key>
 	<true/>
 	<key>com.apple.private.allow-explicit-graphics-priority</key>
 	<true/>
+
+	<!-- 通信权限 -->
 	<key>com.apple.CommCenter.fine-grained</key>
 	<array>
 		<string>spi</string>
 	</array>
+	<key>com.apple.CommCenter.family</key>
+	<true/>
+	<key>com.apple.coretelephony</key>
+	<true/>
+
+	<!-- iOS 15 XPC 权限 -->
+	<key>com.apple.private.xpc.allow-unsafe-any-predicate</key>
+	<true/>
+
+	<!-- iOS 15 VFS 权限 -->
+	<key>com.apple.private.vfs.allow-low-permissions</key>
+	<true/>
+
+	<!-- iOS 15 图形权限 (关键) -->
+	<key>com.apple.graphics.corefront</key>
+	<true/>
+	<key>com.apple.private.graphics.coproc</key>
+	<true/>
+
+	<!-- iOS 15 IOMobileFramebuffer 额外权限 -->
+	<key>com.apple.private.IOMobileFramebuffer.allow-any-connect</key>
+	<true/>
+	<key>com.apple.private.IOMobileFramebuffer.allow-session-seed</key>
+	<true/>
+
+	<!-- iOS 15 允许任意思维团 -->
+	<key>com.apple.private.memorystatus</key>
+	<true/>
+
+	<!-- iOS 15 允许私有API -->
+	<key>com.apple.private.api-allowed</key>
+	<true/>
 	<key>com.apple.private.applesepmanager.allow</key>
 	<true/>
 	<key>com.apple.private.security.disk-device-access</key>
 	<true/>
-	<!-- iOS 15 新增entitlements -->
-	<key>com.apple.private.security.immutable-component</key>
-	<true/>
-	<key>com.apple.private.security.application-specific-register-names</key>
-	<array>
-		<string>IOSurface</string>
-		<string>IOMobileFramebuffer</string>
-	</array>
 </dict>
 </plist>
