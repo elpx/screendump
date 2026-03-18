@@ -1,3 +1,5 @@
+#import <Foundation/Foundation.h>
+#import <UIKit/UIKit.h>
 #include <errno.h>
 #include <substrate.h>
 #include <rfb/rfb.h>
