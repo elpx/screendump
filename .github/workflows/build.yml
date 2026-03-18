@@ -1,29 +1,59 @@
 name: Build
 
-on:
-  push:
-    branches: [master]
-  workflow_dispatch:
+on: [push, workflow_dispatch]
 
 jobs:
   build:
     runs-on: macos-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+    - name: Checkout
+      uses: actions/checkout@v4
 
-      - name: Setup Theos
-        run: |
-          brew install lzo png jpeg openssl
-          export THEOS=/opt/theos
-          git clone --depth 1 https://github.com/theos/theos.git $THEOS
-          echo "$THEOS/bin" >> $GITHUB_PATH
+    - name: Install dependencies
+      run: |
+        brew install ldid
+        brew install libvncserver
 
-      - name: Build
-        run: |
-          cd screendump
-          make clean
-          make
-        env:
-          THEOS_DEVICE_IP: localhost
-          THEOS_DEVICE_PORT: 2222
+    - name: Clone Theos
+      run: |
+        git clone --depth 1 https://github.com/theos/theos.git $HOME/theos
+
+    - name: Clone SDKs and vendor
+      run: |
+        git clone --depth 1 https://github.com/theos/sdks.git $HOME/theos_sdks
+        mkdir -p $HOME/theos/sdks
+        cd $HOME/theos_sdks
+        for sdk in *.sdk; do
+          cp -RP "$sdk" $HOME/theos/sdks/ 2>/dev/null || true
+        done
+
+        git clone --depth 1 https://github.com/theos/lib.git $HOME/theos/vendor/lib
+        git clone --depth 1 https://github.com/theos/logos.git $HOME/theos/vendor/logos
+        git clone --depth 1 https://github.com/theos/headers.git $HOME/theos/vendor/include
+
+    - name: Download vncbuild from original repo
+      run: |
+        cd screendump
+        curl -L -o vncbuild.tar.gz "https://github.com/julioverne/screendump/archive/refs/heads/master.tar.gz"
+        tar -xzf vncbuild.tar.gz
+        cp -R screendump-master/screendump/vncbuild ./
+        rm -rf screendump-master vncbuild.tar.gz
+
+    - name: Setup Environment
+      run: |
+        echo "$HOME/theos/bin" >> $GITHUB_PATH
+        echo "THEOS=$HOME/theos" >> $GITHUB_ENV
+
+    - name: Build
+      working-directory: ./screendump
+      run: |
+        export THEOS=$HOME/theos
+        export PATH=$THEOS/bin:$PATH
+        make clean
+        make
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: screendump-binary
+        path: ./screendump/.theos/obj/
