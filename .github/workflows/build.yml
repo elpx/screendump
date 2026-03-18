@@ -13,6 +13,7 @@ jobs:
       run: |
         brew install ldid
         brew install libvncserver
+        brew install dpkg
 
     - name: Clone Theos
       run: |
@@ -43,6 +44,10 @@ jobs:
       run: |
         echo "$HOME/theos/bin" >> $GITHUB_PATH
         echo "THEOS=$HOME/theos" >> $GITHUB_ENV
+        # Initialize theos
+        cd $HOME/theos
+        echo "THEOS_DEVICE_IP=localhost" >> $GITHUB_ENV
+        echo "THEOS_DEVICE_PORT=2222" >> $GITHUB_ENV
 
     - name: Build & Package
       working-directory: ./screendump
