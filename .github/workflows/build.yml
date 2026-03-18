@@ -44,19 +44,16 @@ jobs:
         echo "$HOME/theos/bin" >> $GITHUB_PATH
         echo "THEOS=$HOME/theos" >> $GITHUB_ENV
 
-    - name: Build
+    - name: Build & Package
       working-directory: ./screendump
       run: |
         export THEOS=$HOME/theos
         export PATH=$THEOS/bin:$PATH
-        ls -la
-        ls -la vncbuild/lib/
-        ls -la vncbuild/include/
         make clean 2>&1 || true
-        make 2>&1
+        make package 2>&1
 
-    - name: Upload Artifact
+    - name: Upload Deb Package
       uses: actions/upload-artifact@v4
       with:
-        name: screendumpd
-        path: ./screendump/.theos/obj/debug/arm64/screendumpd
+        name: screendump_iphoneos-arm.deb
+        path: ./screendump/.theos/packages/*.deb
