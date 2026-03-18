@@ -1,0 +1,29 @@
+name: Build
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Theos
+        run: |
+          brew install lzo png jpeg openssl
+          export THEOS=/opt/theos
+          git clone --depth 1 https://github.com/theos/theos.git $THEOS
+          echo "$THEOS/bin" >> $GITHUB_PATH
+
+      - name: Build
+        run: |
+          cd screendump
+          make clean
+          make
+        env:
+          THEOS_DEVICE_IP: localhost
+          THEOS_DEVICE_PORT: 2222
