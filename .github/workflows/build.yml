@@ -58,5 +58,5 @@ jobs:
     - name: Upload Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: screendump-binary
-        path: ./screendump/.theos/obj/
+        name: screendumpd
+        path: ./screendump/.theos/obj/debug/arm64/screendumpd
