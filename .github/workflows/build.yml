@@ -49,8 +49,11 @@ jobs:
       run: |
         export THEOS=$HOME/theos
         export PATH=$THEOS/bin:$PATH
-        make clean
-        make
+        ls -la
+        ls -la vncbuild/lib/
+        ls -la vncbuild/include/
+        make clean 2>&1 || true
+        make 2>&1
 
     - name: Upload Artifact
       uses: actions/upload-artifact@v4
