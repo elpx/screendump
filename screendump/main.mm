@@ -238,7 +238,7 @@ static void loadPrefs(void)
 
 
 static uint32_t oldSeed;
-static bool useIOSurfaceLock = false; // iOS 15使用IOSurfaceLock检测变化
+static bool useIOSurfaceLock = true; // iOS 15使用IOSurfaceLock检测变化
 
 @implementation FrameUpdater
 {
@@ -265,14 +265,14 @@ static bool useIOSurfaceLock = false; // iOS 15使用IOSurfaceLock检测变化
 {
 	if(isLoopFrame && CCSisEnabled) {
 		//check if screen changed
-		// iOS 15: 使用IOSurfaceLock/Unlock替代IOSurfaceGetSeed
+		// iOS 15: use IOSurfaceLock/Unlock instead of IOSurfaceGetSeed
 		uint32_t newSeed = 0;
 		IOReturn lockResult = IOSurfaceLock(screenSurface, kIOSurfaceLockReadOnly, &newSeed);
 		bool hasNewFrame = false;
 
 		if (lockResult == kIOReturnSuccess) {
 			if (useIOSurfaceLock) {
-				// iOS 15+ 方式: 比较seed值
+				// iOS 15+ way: compare seed values
 				hasNewFrame = (oldSeed != newSeed);
 			} else {
 				// 旧版iOS: 成功lock就说明有变化
